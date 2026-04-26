@@ -1,4 +1,6 @@
-# راهنمای کامل فارسی # راهنمای کامل فارسی — Vercel XHTTP Relay
+# Vercel XHTTP Relay
+
+### 🇮🇷 راهنمای کامل فارسی — Complete Persian Setup Guide
 
 [![Telegram Channel](https://img.shields.io/badge/Telegram-%40avaco__cloud-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/avaco_cloud)
 
@@ -38,11 +40,14 @@ A minimal relay running on **Vercel Edge Functions** that forwards **XHTTP** tra
 - فقط یه کانفیگ آماده (vless/vmess) از فروشنده گرفتی
 - کانفیگت WebSocket / gRPC / Reality / Trojan / TCP هست
 - می‌خوای بدون VPS فقط با Vercel پروکسی بسازی
+- **ترافیک سنگین** داری (استریم 4K، دانلود حجیم، torrent، چندکاربره) — چون **Fast Origin Transfer در Hobby خیلی زود تموم می‌شه** و حساب Pause می‌شه
 
 ✅ **به دردت می‌خوره** اگر:
 - VPS داری یا می‌خوای بگیری
 - می‌خوای transport رو **XHTTP** بذاری
 - می‌خوای IP سرورت پنهان بمونه
+- استفاده‌ی **شخصی و سبک** می‌کنی (چت، مرور وب، ویدیو تا 1080p، موزیک)
+- یا حاضری برای ترافیک سنگین پلن **Pro** بگیری
 
 ---
 
@@ -64,11 +69,22 @@ A minimal relay running on **Vercel Edge Functions** that forwards **XHTTP** tra
 
 ## محدودیت‌ها و هشدارها
 
+🔴 **هشدار مهم — Fast Origin Transfer:** در پلن Hobby هر بایت ترافیک **دو بار** شمرده می‌شه (یک‌بار کلاینت↔Vercel و یک‌بار Vercel↔سرور). اگه سهمیه تموم بشه، Vercel اکانتت رو **Pause می‌کنه**، کاربرا دیگه نمی‌تونن وصل بشن و **۳۰ روز** باید صبر کنی یا Pro بخری. جزئیات در بخش [محدودیت‌های Vercel](#محدودیت‌های-vercel).
+
 ⚠️ **فقط XHTTP**: WebSocket, gRPC, TCP, mKCP, QUIC و Reality روی Vercel Edge کار **نمی‌کنه** (محدودیت runtime).
 
 ⚠️ **TOS Vercel**: استفاده‌ی proxy ممکنه TOS رو نقض کنه. اگه ترافیک بالا باشه، اکانتت ممکنه suspend بشه. ترافیک رو متعادل نگه دار.
 
 ⚠️ **آموزشی**: این repo برای آموزش و تست شخصیه، نه production. هیچ SLA و پشتیبانی نداره.
+
+### 💡 توصیه‌های مصرف پایدار
+
+برای جلوگیری از قطع شدن اتصال در وسط ماه:
+
+- 📊 **Dashboard → Usage** رو **هفتگی** چک کن (Vercel هنگام ۸۰٪ و ۱۰۰٪ ایمیل می‌فرسته)
+- 🔄 **چند پروژه Hobby** با چند اکانت Gmail بساز و در کلاینت به‌صورت **Load Balance / Failover** تنظیم کن
+- ⏸ ویدیوهای 4K و دانلودهای حجیم رو از پروکسی **خارج** کن (مستقیم یا از پروکسی دیگه)
+- 💳 اگه ترافیک زیاد داری، **Pro ($20/ماه)** بگیر و با **Spend Management** سقف هزینه بذار
 
 ---
 
@@ -621,22 +637,52 @@ https://ifconfig.me
 
 ## محدودیت‌های Vercel
 
+> ⚠️ این اعداد از مستندات رسمی Vercel در زمان نوشتن این README هستن. ممکنه تغییر کرده باشن — برای آخرین آپدیت [vercel.com/pricing](https://vercel.com/pricing) و [vercel.com/docs/limits](https://vercel.com/docs/limits) رو چک کن.
+
+### اعداد عمومی
+
 | محدودیت | Hobby (رایگان) | Pro |
 |---|---|---|
-| Bandwidth | ۱۰۰ GB/ماه | ۱ TB/ماه |
-| Edge Requests | ۱M/ماه | ۱۰M/ماه |
-| CPU/request | ~۵۰ms | ~۵۰ms |
-| Wall-clock/request | ۲۵ ثانیه | ۳۰۰ ثانیه |
+| **Fast Data Transfer** (کلاینت ↔ Vercel) | ۱۰۰ GB / ماه | ۱ TB / ماه |
+| **Fast Origin Transfer** (Vercel ↔ سرور پشتی) | محدود (مهم برای relay!) | ~۱۰× Hobby |
+| **Edge Requests** | ۱M / ماه | ۱۰M / ماه |
+| **Active CPU Time** | ۴ ساعت / ماه | ۴۰ ساعت / ماه |
+| **شروع Response (Edge)** | ۲۵ ثانیه | ۲۵ ثانیه |
+| **حداکثر مدت Streaming** | ۳۰۰ ثانیه (۵ دقیقه) | ۳۰۰ ثانیه |
 
-### تخمین مصرف Hobby (۱۰۰ GB)
+### 🔴 نکته‌ی خیلی مهم: Fast Origin Transfer
 
-| استفاده | تقریباً |
+برای استفاده‌ی **پروکسی/relay** این مورد بحرانی‌تر از Fast Data Transfer هست!
+
+**هر بایت ترافیک شما دو بار شمرده می‌شه:**
+
+```
+┌─────────┐   Fast Data    ┌────────┐   Fast Origin   ┌───────────┐
+│ کلاینت   │ ─────────────► │ Vercel │ ─────────────► │ Xray سرور │
+│         │   Transfer     │  Edge  │   Transfer      │           │
+└─────────┘                └────────┘                 └───────────┘
+            (سهمیه ۱ — کلاینت)        (سهمیه ۲ — origin)
+```
+
+- ۱ GB دانلود از سمت تو = ۱ GB Fast Data + ۱ GB Fast Origin مصرف می‌شه
+- اگه Fast Origin Transfer به حدش برسه، حساب Hobby ت **pause می‌شه** و باید ۳۰ روز صبر کنی یا upgrade کنی
+
+> 📚 [مستندات Fast Origin Transfer](https://vercel.com/docs/manage-cdn-usage)
+
+### تخمین مصرف Hobby (محافظه‌کارانه)
+
+با در نظر گرفتن **هر دو** Fast Data و Fast Origin:
+
+| استفاده | تقریبی |
 |---|---|
-| چت / تلگرام | عملاً نامحدود |
-| استریم موزیک | عملاً نامحدود |
-| یوتیوب 720p | ~۱۰۰ ساعت/ماه |
-| یوتیوب 1080p | ~۳۵-۵۰ ساعت/ماه |
-| یوتیوب 4K / دانلود | ~۱۴ ساعت/ماه |
+| چت / تلگرام / WhatsApp | عملاً نامحدود |
+| استریم موزیک (Spotify) | عملاً نامحدود |
+| مرور وب عادی | عملاً نامحدود |
+| یوتیوب 720p | ~۵۰ ساعت / ماه |
+| یوتیوب 1080p | ~۲۰-۳۰ ساعت / ماه |
+| یوتیوب 4K / دانلود حجیم | ~۷ ساعت / ماه |
+
+> 💡 برای استفاده‌ی روزمره (چت، مرور، موزیک، ویدیو 720p) Hobby کاملاً کافیه. برای استریم 4K یا دانلود سنگین، یا Pro بگیر یا چند پروژه‌ی Hobby بساز و بین‌شون load balance کن.
 
 ---
 
